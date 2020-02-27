@@ -1,0 +1,41 @@
+title = "graveyard #42"
+# Must be a valid UNIX file name
+package = "graveyard_42"
+
+[env]
+
+	[env.dev]
+	ips = ["192.168.1.1", "192.168.1.2"]
+		[env.dev.ssh]
+		# 22 by default
+		port = 23
+		# relative/absolute path to ssh key
+		key = "dev_ssh_key"
+		# blank('') by default
+		password = ""
+
+	[env.prod]
+		ips = ["192.168.1.3", "192.168.1.4"]
+			[env.prod.ssh]
+			port = 23
+			key = "prod_ssh_key"
+			password = ""
+
+[provision]
+command = """
+sudo add-apt-repository ppa:webupd8team/java
+sudo apt-get update
+sudo apt-get install
+sudo apt-get install oracle-java8-installer
+"""
+
+[run]
+# relative/absolute path to the local directory that contains the app to be deployed
+directory = "deploy"
+# relative/absolute path to the remote directory where the app should be stored
+to = "/usr/bin"
+# command to start the app
+start = "java -jar {to}/{package}/app.jar {to}/{package}/config-{env}.yml > log.txt 2> log.txt"
+# (Optional) command to run after starting the app on each instance
+complete = """
+"""
