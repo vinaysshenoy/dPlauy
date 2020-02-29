@@ -1,0 +1,13 @@
+[Unit]
+Description={title}
+
+[Service]
+Type=simple
+WorkingDirectory={path}
+ExecStart={path}/start.sh
+Restart=on-failure
+RestartSec=15
+TimeoutSec=15
+
+[Install]
+WantedBy=multi-user.target
