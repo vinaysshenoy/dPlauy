@@ -24,6 +24,10 @@ def remote_exec(ssh_client, command):
 
 	return success, error
 
+def read_file(path):
+	with open(path, 'r') as file:
+	return file.read()
+
 
 def deploy_to_env(service_template, script_template, package_archive_path, package, title, env, inventory, provision, run):
 	print('Deploy to \'{}\''.format(env))
@@ -99,12 +103,8 @@ print('Arg Length: {0}, Args: {1}'.format(len(sys.argv), str(sys.argv)))
 project_dir = sys.argv[1]
 deploy_env = sys.argv[2].split('=')[1].split(',')
 deploy_file = 'dPlauy.toml'
-
-with open('systemd_service_template.txt', 'r') as file:
-	service_template = file.read()
-
-with open('start_script_template.txt') as file:
-	script_template = file.read()
+service_template = read_file('systemd_service_template.txt')
+script_template = read_file('start_script_template.txt')
 
 os.chdir(project_dir)
 print('Changed working directory to {}'.format(os.getcwd()))
