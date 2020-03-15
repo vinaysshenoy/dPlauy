@@ -1,5 +1,16 @@
+wget -O caddy https://github.com/caddyserver/caddy/releases/download/v2.0.0-beta.17/caddy2_beta17_linux_amd64
+sudo mv caddy /usr/bin/
+sudo chmod +x /usr/bin/caddy
+sudo mv caddy.service /etc/systemd/system/
+sudo chmod 644 /etc/systemd/system/caddy.service
+sudo mkdir -p /etc/caddy
+sudo mv Caddyfile /etc/caddy/
+sudo systemctl daemon-reload
+sudo systemctl enable caddy
+sudo systemctl start caddy
 sudo systemctl stop {package}
 mkdir -p {remote_path}
+sudo mkdir -p /etc/caddy
 tar -xf package.tar -C {remote_path} --strip-components=1
 sudo mv {package}.service /etc/systemd/system/
 sudo chmod 644 /etc/systemd/system/{package}.service
@@ -7,3 +18,4 @@ sudo chmod +x start.sh
 mv start.sh {remote_path}/
 sudo systemctl enable {package}
 sudo systemctl start {package}
+sudo systemctl reload caddy

@@ -26,10 +26,10 @@ def remote_exec(ssh_client, command):
 
 def read_file(path):
 	with open(path, 'r') as file:
-	return file.read()
+		return file.read()
 
 
-def deploy_to_env(service_template, script_template, package_archive_path, package, title, env, inventory, provision, run):
+def deploy_to_env(service_template, script_template, run_service, caddy_service, caddyfile_template, package_archive_path, package, title, env, inventory, provision, run):
 	print('Deploy to \'{}\''.format(env))
 	print('Inventory: {}'.format(inventory))
 	print('Provision: {}'.format(provision))
@@ -39,6 +39,15 @@ def deploy_to_env(service_template, script_template, package_archive_path, packa
 	ssh_port = ssh['port'] if 'port' in ssh else 22
 	ssh_user = ssh['user'] if 'user' in ssh else 'admin'
 	ssh_password = ssh['password'] if 'password' in ssh else ''
+
+	if 'domain' not in inventory:
+		exit_with_error('No domain found!')
+
+	if 'admin' not in inventory:
+		exit_with_error('No admin found!')
+
+	domain = inventory['domain']
+	admin = inventory['admin']
 
 	print('SSH port: {0}, username: {1}, password: {2}'.format(ssh_port, ssh_user, ssh_password))
 
@@ -73,7 +82,14 @@ def deploy_to_env(service_template, script_template, package_archive_path, packa
 			with sftp_client.file('{0}.service'.format(package), 'w') as file:
 				file.write(service_file_content)
 
-			exec_service = run['start'].format(title = title, path = remote_path, env = env)
+			caddy_file_content = caddyfile_template.format(domain = domain)
+			with sftp_client.file('Caddyfile', 'w') as file:
+				file.write(caddy_file_content)
+
+			with sftp_client.file('caddy.service', 'w') as file:
+				file.write(caddy_service)
+
+			exec_service = run['start'].format(title = title, path = remote_path, env = env, domain = domain)
 			start_script_content = script_template.format(start = exec_service)
 			with sftp_client.file('start.sh', 'w') as file:
 				file.write(start_script_content)
@@ -82,7 +98,7 @@ def deploy_to_env(service_template, script_template, package_archive_path, packa
 
 			print('Transfer complete!')
 
-			unpack_tar = read_file('set_up.txt').format(package = package, remote_path = remote_path)
+			unpack_tar = run_service.format(package = package, remote_path = remote_path, domain = domain, admin = admin)
 			remote_exec(ssh_client, unpack_tar)
 
 			ssh_client.close()
@@ -95,6 +111,9 @@ deploy_env = sys.argv[2].split('=')[1].split(',')
 deploy_file = 'dPlauy.toml'
 service_template = read_file('systemd_service_template.txt')
 script_template = read_file('start_script_template.txt')
+run_service = read_file('set_up.txt')
+caddy_service = read_file('caddy.service')
+caddyfile_template = read_file('Caddyfile_template.txt')
 
 os.chdir(project_dir)
 print('Changed working directory to {}'.format(os.getcwd()))
@@ -123,4 +142,4 @@ for env in deploy_env:
 	if env not in deploy_desc['env']:
 		exit_with_error( message = 'Could not find inventory for environment \'{}\''.format(env))
 	inventory = deploy_desc['env'][env]
-	deploy_to_env(service_template, script_template, tar_path, deploy_desc['package'], deploy_desc['title'], env, inventory, deploy_desc['provision'], deploy_desc['run'])
+	deploy_to_env(service_template, script_template, run_service, caddy_service, caddyfile_template, tar_path, deploy_desc['package'], deploy_desc['title'], env, inventory, deploy_desc['provision'], deploy_desc['run'])
