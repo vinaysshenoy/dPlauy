@@ -1,0 +1,9 @@
+sudo systemctl stop {package}
+mkdir -p {remote_path}
+tar -xf package.tar -C {remote_path} --strip-components=1
+sudo mv {package}.service /etc/systemd/system/
+sudo chmod 644 /etc/systemd/system/{package}.service
+sudo chmod +x start.sh
+mv start.sh {remote_path}/
+sudo systemctl enable {package}
+sudo systemctl start {package}

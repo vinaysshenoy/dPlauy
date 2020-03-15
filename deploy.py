@@ -82,17 +82,7 @@ def deploy_to_env(service_template, script_template, package_archive_path, packa
 
 			print('Transfer complete!')
 
-			unpack_tar = """
-sudo systemctl stop {0}
-mkdir -p {1}
-tar -xf package.tar -C {1} --strip-components=1
-sudo mv {0}.service /etc/systemd/system/
-sudo chmod 644 /etc/systemd/system/{0}.service
-sudo chmod +x start.sh
-mv start.sh {1}/
-sudo systemctl enable {0}
-sudo systemctl start {0}
-""".format(package, remote_path)
+			unpack_tar = read_file('set_up.txt').format(package = package, remote_path = remote_path)
 			remote_exec(ssh_client, unpack_tar)
 
 			ssh_client.close()
